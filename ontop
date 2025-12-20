@@ -342,7 +342,7 @@ if ChatEnabled and chatWindow then
 end
 local Camera = workspace.CurrentCamera
 local Window = Library:CreateWindow({
-    Title = '               Unnamed Enhancements | dsc.gg/Unnamed-enhancements    Da Hood',
+    Title = 'Unnamed Enhancements | dsc.gg/Unnamed-enhancements  Da Hood',
     Center = false,
     AutoShow = true,
     TabPadding = 2,
