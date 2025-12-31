@@ -1,324 +1,3 @@
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
-local CORRECT_KEY = "welovethienan"
-local DISCORD_LINK = "dsc.gg/Unnamed-enhancements"
-local KEY_FILE = "KeySystemKey.txt"
-
-local keyVerified = false
-
--- Check if key is already saved
-if isfile and readfile then
-    if isfile(KEY_FILE) then
-        local savedKey = readfile(KEY_FILE)
-        if savedKey == CORRECT_KEY then
-            print("Key Found - Auto Verified!")
-            keyVerified = true
-        end
-    end
-end
-
--- Only show UI if key is not verified
-if not keyVerified then
-    -- Smooth tween function
-    local function smoothTween(obj, props, time)
-        TweenService:Create(obj, TweenInfo.new(time or 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
-    end
-
-    -- Create ScreenGui
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "KeySystemUI"
-    ScreenGui.ResetOnSpawn = false
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.Parent = CoreGui
-
-    -- Main Frame (Card)
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 400, 0, 320)
-    MainFrame.Position = UDim2.new(0.5, -200, 0.5, -160)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)  -- Dark background
-    MainFrame.BackgroundTransparency = 0
-    MainFrame.BorderSizePixel = 0
-    MainFrame.Active = true
-    MainFrame.Draggable = true
-    MainFrame.Parent = ScreenGui
-
-    -- Add UICorner for rounded corners
-    local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 20)
-    MainCorner.Parent = MainFrame
-
-    -- Add UIStroke for border glow
-    local MainStroke = Instance.new("UIStroke")
-    MainStroke.Color = Color3.fromRGB(200, 200, 200)  -- Light gray border
-    MainStroke.Thickness = 2
-    MainStroke.Transparency = 0.5
-    MainStroke.Parent = MainFrame
-
-    -- No colorful gradient, keep solid dark
-
-    -- Title Label
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, 0, 0, 50)
-    TitleLabel.Position = UDim2.new(0, 0, 0, 30)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "🔐 Key Unnamed"
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
-    TitleLabel.TextSize = 28
-    TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.Parent = MainFrame
-
-    -- Subtitle Label
-    local SubtitleLabel = Instance.new("TextLabel")
-    SubtitleLabel.Size = UDim2.new(1, 0, 0, 20)
-    SubtitleLabel.Position = UDim2.new(0, 0, 0, 80)
-    SubtitleLabel.BackgroundTransparency = 1
-    SubtitleLabel.Text = "Enter key to continue"
-    SubtitleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)  -- Light gray text
-    SubtitleLabel.TextSize = 14
-    SubtitleLabel.Font = Enum.Font.Gotham
-    SubtitleLabel.Parent = MainFrame
-
-    -- Key Input TextBox
-    local KeyInput = Instance.new("TextBox")
-    KeyInput.Size = UDim2.new(0, 340, 0, 50)
-    KeyInput.Position = UDim2.new(0.5, -170, 0, 120)
-    KeyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)  -- Dark gray input bg
-    KeyInput.BackgroundTransparency = 0
-    KeyInput.BorderSizePixel = 0
-    KeyInput.PlaceholderText = "Enter your key..."
-    KeyInput.Text = ""
-    KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
-    KeyInput.TextSize = 16
-    KeyInput.Font = Enum.Font.GothamBold
-    KeyInput.ClearTextOnFocus = false
-    KeyInput.Parent = MainFrame
-
-    local InputCorner = Instance.new("UICorner")
-    InputCorner.CornerRadius = UDim.new(0, 12)
-    InputCorner.Parent = KeyInput
-
-    local InputStroke = Instance.new("UIStroke")
-    InputStroke.Color = Color3.fromRGB(200, 200, 200)  -- Light gray stroke
-    InputStroke.Thickness = 2
-    InputStroke.Transparency = 0.7
-    InputStroke.Parent = KeyInput
-
-    -- Get Key Button
-    local GetKeyButton = Instance.new("TextButton")
-    GetKeyButton.Size = UDim2.new(0, 160, 0, 50)
-    GetKeyButton.Position = UDim2.new(0, 30, 0, 200)
-    GetKeyButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)  -- Dark gray button
-    GetKeyButton.BorderSizePixel = 0
-    GetKeyButton.Text = "Get Key Free"
-    GetKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
-    GetKeyButton.TextSize = 16
-    GetKeyButton.Font = Enum.Font.GothamBold
-    GetKeyButton.Parent = MainFrame
-
-    local GetKeyCorner = Instance.new("UICorner")
-    GetKeyCorner.CornerRadius = UDim.new(0, 12)
-    GetKeyCorner.Parent = GetKeyButton
-
-    -- Check Key Button
-    local CheckKeyButton = Instance.new("TextButton")
-    CheckKeyButton.Size = UDim2.new(0, 160, 0, 50)
-    CheckKeyButton.Position = UDim2.new(0, 210, 0, 200)
-    CheckKeyButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)  -- Slightly lighter gray
-    CheckKeyButton.BorderSizePixel = 0
-    CheckKeyButton.Text = "Check Key"
-    CheckKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
-    CheckKeyButton.TextSize = 16
-    CheckKeyButton.Font = Enum.Font.GothamBold
-    CheckKeyButton.Parent = MainFrame
-
-    local CheckKeyCorner = Instance.new("UICorner")
-    CheckKeyCorner.CornerRadius = UDim.new(0, 12)
-    CheckKeyCorner.Parent = CheckKeyButton
-
-    -- Status Label (for notifications)
-    local StatusLabel = Instance.new("TextLabel")
-    StatusLabel.Size = UDim2.new(1, 0, 0, 30)
-    StatusLabel.Position = UDim2.new(0, 0, 0, 270)
-    StatusLabel.BackgroundTransparency = 1
-    StatusLabel.Text = ""
-    StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
-    StatusLabel.TextSize = 14
-    StatusLabel.Font = Enum.Font.GothamBold
-    StatusLabel.Parent = MainFrame
-
-    -- Close Button
-    local CloseBtn = Instance.new("TextButton")
-    CloseBtn.Size = UDim2.new(0, 32, 0, 32)
-    CloseBtn.Position = UDim2.new(1, -42, 0, 10)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)  -- Gray close button
-    CloseBtn.Text = "X"
-    CloseBtn.TextColor3 = Color3.new(255, 255, 255)  -- White text
-    CloseBtn.TextSize = 18
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.BorderSizePixel = 0
-    CloseBtn.Parent = MainFrame
-
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 8)
-    CloseCorner.Parent = CloseBtn
-
-    -- Particles for prettier GUI (adjusted color)
-    spawn(function()
-        local RunService = game:GetService("RunService")
-        local particles = {}
-        
-        for i = 1, 25 do
-            local particle = Instance.new("Frame")
-            particle.Size = UDim2.new(0, math.random(3, 5), 0, math.random(3, 5))
-            particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
-            particle.BackgroundColor3 = Color3.fromRGB(200, 200, 200)  -- Light gray particles
-            particle.BackgroundTransparency = math.random(75, 90) / 100
-            particle.BorderSizePixel = 0
-            particle.ZIndex = 0
-            particle.Parent = MainFrame
-            
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(1, 0)
-            corner.Parent = particle
-            
-            table.insert(particles, {
-                obj = particle,
-                speed = math.random(15, 40) / 1000,
-                angle = math.random() * math.pi * 2
-            })
-        end
-        
-        local conn
-        conn = RunService.Heartbeat:Connect(function()
-            if not MainFrame.Parent then
-                conn:Disconnect()
-                return
-            end
-            for _, p in pairs(particles) do
-                local pos = p.obj.Position
-                p.angle = p.angle + p.speed
-                local newX = pos.X.Scale + math.cos(p.angle) * 0.002
-                local newY = pos.Y.Scale + math.sin(p.angle) * 0.002
-                p.obj.Position = UDim2.new(newX, 0, newY, 0)
-            end
-        end)
-    end)
-
-    -- Notification Function
-    local function showNotification(message, isSuccess)
-        StatusLabel.Text = message
-        StatusLabel.TextColor3 = isSuccess and Color3.fromRGB(150, 255, 150) or Color3.fromRGB(255, 150, 150)  -- Adjusted for visibility
-        
-        -- Fade animation
-        StatusLabel.TextTransparency = 0
-        wait(2.5)
-        
-        local fadeOut = TweenService:Create(StatusLabel, TweenInfo.new(0.5), {TextTransparency = 1})
-        fadeOut:Play()
-    end
-
-    -- Button Hover Effects
-    local function addHoverEffect(button, hoverColor)
-        local originalColor = button.BackgroundColor3
-        button.MouseEnter:Connect(function()
-            smoothTween(button, {BackgroundColor3 = hoverColor})
-        end)
-        
-        button.MouseLeave:Connect(function()
-            smoothTween(button, {BackgroundColor3 = originalColor})
-        end)
-    end
-    addHoverEffect(GetKeyButton, Color3.fromRGB(80, 80, 80))  -- Lighter gray on hover
-    addHoverEffect(CheckKeyButton, Color3.fromRGB(100, 100, 100))
-    addHoverEffect(CloseBtn, Color3.fromRGB(150, 0, 0))  -- Reddish for close
-
-    -- Get Key Button Function
-    GetKeyButton.MouseButton1Click:Connect(function()
-        if setclipboard then
-            setclipboard(DISCORD_LINK)
-            showNotification("✅ Link copied to clipboard!", true)
-        end
-        
-        -- Button click animation
-        local originalSize = GetKeyButton.Size
-        smoothTween(GetKeyButton, {Size = UDim2.new(0, 150, 0, 45)})
-        task.wait(0.1)
-        smoothTween(GetKeyButton, {Size = originalSize})
-    end)
-
-    -- Check Key Button Function
-    CheckKeyButton.MouseButton1Click:Connect(function()
-        local inputKey = KeyInput.Text
-        
-        if inputKey == CORRECT_KEY then
-            showNotification("🎉 Correct key! Loading...", true)
-            
-            -- Save key to file
-            if writefile then
-                writefile(KEY_FILE, CORRECT_KEY)
-            end
-            
-            -- Success animation
-            smoothTween(MainFrame, {BackgroundTransparency = 1}, 0.5)
-            for _, child in pairs(MainFrame:GetDescendants()) do
-                if child:IsA("TextLabel") or child:IsA("TextButton") or child:IsA("TextBox") then
-                    smoothTween(child, {TextTransparency = 1}, 0.5)
-                end
-                if child:IsA("Frame") or child:IsA("TextButton") then
-                    smoothTween(child, {BackgroundTransparency = 1}, 0.5)
-                end
-                if child:IsA("UIStroke") then
-                    smoothTween(child, {Transparency = 1}, 0.5)
-                end
-            end
-            
-            task.wait(0.6)
-            ScreenGui:Destroy()
-            keyVerified = true
-            print("Key System Unlocked!")
-            print("Script loaded successfully!")
-        else
-            showNotification("❌ Incorrect key! Please try again.", false)
-            KeyInput.Text = ""
-            
-            -- Shake animation for wrong key
-            local originalPos = MainFrame.Position
-            for i = 1, 3 do
-                smoothTween(MainFrame, {Position = originalPos + UDim2.new(0, 10, 0, 0)}, 0.05)
-                task.wait(0.05)
-                smoothTween(MainFrame, {Position = originalPos - UDim2.new(0, 10, 0, 0)}, 0.05)
-                task.wait(0.05)
-            end
-            MainFrame.Position = originalPos
-        end
-    end)
-
-    -- Enter key to verify
-    KeyInput.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            CheckKeyButton.MouseButton1Click:Fire()
-        end
-    end)
-
-    -- Close button
-    CloseBtn.MouseButton1Click:Connect(function()
-        smoothTween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-        task.wait(0.3)
-        ScreenGui:Destroy()
-    end)
-
-    -- Entrance Animation
-    MainFrame.Size = UDim2.new(0, 0, 0, 0)
-    local entranceTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
-        Size = UDim2.new(0, 400, 0, 320)
-    })
-    entranceTween:Play()
-    print("Key System Loaded Successfully!")
-
-    -- Wait for key verification
-    repeat task.wait(0.1) until keyVerified
-end
 
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -327,7 +6,6 @@ local ChatService = game:GetService("TextChatService")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
--- GAMEPASS ID
 local PREMIUM_PASS = 1618296323
 local BYPASS_PASS  = 1618124347
 
@@ -645,7 +323,7 @@ if not success then
     warn("[Anti-RemoteBlock] Executor not support hook metatable (__namecall). Skipped.")
 end
 warn("[+] Unnamed : anticheat bypassed.")
-local repo = 'https://raw.githubusercontent.com/anhchongyeuvo/kazama-vhuy/refs/heads/main/'
+local repo = 'https://raw.githubusercontent.com/Kazamatcha/unnamed/refs/heads/main/'
 local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
 local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
 local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
@@ -663,11 +341,12 @@ if ChatEnabled and chatWindow then
 end
 local Camera = workspace.CurrentCamera
 local Window = Library:CreateWindow({
-    Title = 'Unnamed Enhancements | dsc.gg/Unnamed-enhancements  Da Hood',
+    Title = 'Unnamed Enhancements | discord.gg/Vsnz2wfjP5',
     Center = false,
     AutoShow = true,
     TabPadding = 2,
-    MenuFadeTime = 0
+    MenuFadeTime = 0.2,
+    Resizeable = true,
 })
 local Tabs = {
     Main = Window:AddTab('Main'),
@@ -1558,7 +1237,7 @@ PlayersGroup:AddButton('Teleport to Target', function()
     Library:Notify("Teleported to " .. matchacc.AutoKill.Target, 2)
 end)
 PlayersGroup:AddToggle('AutoKillEnabled', {
-    Text = 'Enabled',
+    Text = 'Autokill',
     Default = false,
     Callback = function(Value)
         matchacc.AutoKill.Enabled = Value
@@ -4798,9 +4477,6 @@ UserInputService.InputEnded:Connect(function(input)
         M1Down = false
     end
 end)
-local SelectedGun = '[Rifle]'
-local BuyingSingle = false
-local BuyingAmmo = false
 local ShopTable = {
     ["[Rifle]"] = {ShopName = "[Rifle] - $1694"},
     ["[Rifle Ammo]"] = {ShopName = "5 [Rifle Ammo] - $273"},
@@ -4810,6 +4486,8 @@ local ShopTable = {
     ["[AK47 Ammo]"] = {ShopName = "90 [AK47 Ammo] - $87"},
     ["[AUG]"] = {ShopName = "[AUG] - $2131"},
     ["[AUG Ammo]"] = {ShopName = "90 [AUG Ammo] - $87"},
+    ["[Flintlock]"] = {ShopName = "[Flintlock] - $1421"},
+    ["[Flintlock Ammo]"] = {ShopName = "5 [Flintlock Ammo] - $163"},
     ["[AR]"] = {ShopName = "[AR] - $1093"},
     ["[AR Ammo]"] = {ShopName = "60 [AR Ammo] - $82"},
     ["[Double-Barrel SG]"] = {ShopName = "[Double-Barrel SG] - $1475"},
@@ -4840,10 +4518,9 @@ local ShopTable = {
     ["[Taser]"] = {ShopName = "[Taser] - $1093"},
     ["[Grenade]"] = {ShopName = "[Grenade] - $765"},
 }
-
 local headshots = {}
+headshots.AutoLoadout = {Enabled = false, Guns = {}, Queue = {}, CurrentBuying = nil}
 headshots.AutoArmor = {Enabled = false}
-headshots.AutoLoadout = {Enabled = false, Gun = '[Rifle]'}
 local pingvalue = nil
 local split = nil
 local ping = nil
@@ -5400,170 +5077,83 @@ game:GetService('RunService').Heartbeat:Connect(function(dt)
         end
     end
     
-    -- Buy single
-    if BuyingSingle and not localPlayer.Character:FindFirstChild(SelectedGun)
-        and not localPlayer.Backpack:FindFirstChild(SelectedGun) then
-        
-        BuyingSingleActive = true
-    end
-    
-    -- Buying ammo
-    if BuyingAmmo then
-        BuyingAmmoActive = true
-    end
-    
-    -- AutoLoadout rewritten to use Inventory Ammo
-    if headshots.AutoLoadout.Enabled and headshots.AutoLoadout.Gun then
-        
-        local gunName = headshots.AutoLoadout.Gun
-        local char = localPlayer.Character
-        local backpack = localPlayer.Backpack
 
-        local hasGun =
-            char:FindFirstChild(gunName)
-            or backpack:FindFirstChild(gunName)
-
-        local invAmmo = GetInventoryAmmo(gunName)
-
-        if not hasGun then
-            AutoLoadoutActive = true     -- mua súng
-
-        elseif invAmmo <= 0 then
-            BuyingAmmo = true            -- mua ammo
-
-        else
-            AutoLoadoutActive = false
-            BuyingAmmo = false
-        end
-    end
-
-    -- Armor
-    if headshots.AutoArmor.Enabled and localPlayer.Character.BodyEffects.Armor.Value < 100 then
-        AutoArmorActive = true
-    end
-
-    -- disable desync logic
-    if TargetAimActive or matchacc.AutoKill.Enabled or AutoArmorActive
-    or AutoLoadoutActive or BuyingAmmoActive or BuyingSingleActive then
-        abletodesync = false
-    else
-        abletodesync = true
-    end
-
-    -- purchase processing
-    local plr = localPlayer
-    local char = plr.Character
+    ------------------------------------------------------------
+    -- HANDLE BUY ACTIONS
+    ------------------------------------------------------------
+    local char = localPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    
-    if char and hrp then
-        pcall(function()
+    if not char or not hrp then return end
 
-            -------- BUY SINGLE -------------
-            if BuyingSingle and not char:FindFirstChild(SelectedGun)
-                and not plr.Backpack:FindFirstChild(SelectedGun) then
-                
-                local shop = workspace.Ignored.Shop:FindFirstChild(ShopTable[SelectedGun].ShopName)
-                if shop and shop:FindFirstChild("Head") then
-                    
-                    local saved = hrp.CFrame
-                    hrp.CFrame = shop.Head.CFrame
-                    
-                    RunService:BindToRenderStep("Restore",199,function()
-                        hrp.CFrame = saved
-                        RunService:UnbindFromRenderStep("Restore")
-                    end)
-
-                    local currentTool = char:FindFirstChildOfClass("Tool")
-                    if currentTool then
-                        currentTool.Parent = plr.Backpack
+    pcall(function()
+        --------------------------------------------------------
+        -- AUTO LOADOUT LOGIC (ĐÃ SỬA VỊ TRÍ BUYINGACTIVE)
+        --------------------------------------------------------
+        if headshots.AutoLoadout.Enabled then
+            if not headshots.AutoLoadout.CurrentBuying then
+                if #headshots.AutoLoadout.Queue == 0 then
+                    local orderedGuns = {}
+                    for gun in pairs(headshots.AutoLoadout.Guns) do
+                        table.insert(orderedGuns, gun)
                     end
-                    
-                    fireclickdetector(shop:FindFirstChildOfClass("ClickDetector"))
-                end
-            else
-                BuyingSingle = false
-            end
-
-            -------- BUY AMMO  --------------
-            if BuyingAmmo then
-                
-                local gunName = headshots.AutoLoadout.Gun
-                local ammoName = "["..gunName:sub(2,-2).." Ammo]"
-                local ammoData = ShopTable[ammoName]
-                
-                if ammoData then
-                    
-                    local shop = workspace.Ignored.Shop:FindFirstChild(ammoData.ShopName)
-                    if shop and shop:FindFirstChild("Head") then
-                        
-                        -- ensure gun is unequipped
-                        local tool = char:FindFirstChild(gunName)
-                        if tool then tool.Parent = plr.Backpack end
-                        
-                        local saved = hrp.CFrame
-                        hrp.CFrame = shop.Head.CFrame
-                        
-                        RunService:BindToRenderStep("Restore",199,function()
-                            hrp.CFrame = saved
-                            RunService:UnbindFromRenderStep("Restore")
-                        end)
-                        
-                        local currentTool = char:FindFirstChildOfClass("Tool")
-                        if currentTool then currentTool.Parent = plr.Backpack end
-                        
-                        fireclickdetector(shop:FindFirstChildOfClass("ClickDetector"))
+                    table.sort(orderedGuns)
+                    for _, gun in ipairs(orderedGuns) do
+                        local hasGun = localPlayer.Character:FindFirstChild(gun) or localPlayer.Backpack:FindFirstChild(gun)
+                        if not hasGun then
+                            if ShopTable[gun] then
+                                table.insert(headshots.AutoLoadout.Queue, {type = "gun", name = gun})
+                            end
+                        else
+                            local invAmmo = GetInventoryAmmo(gun)
+                            if invAmmo == 0 then
+                                local ammoKey = "[" .. gun:sub(2, -2) .. " Ammo]"
+                                if ShopTable[ammoKey] then
+                                    table.insert(headshots.AutoLoadout.Queue, {type = "ammo", gun = gun})
+                                end
+                            end
+                        end
                     end
                 end
-                
-                BuyingAmmo = false
-            end
-
-            -------- AUTO BUY GUN --------
-            if headshots.AutoLoadout.Enabled and headshots.AutoLoadout.Gun
-            and ShopTable[headshots.AutoLoadout.Gun]
-            and not char:FindFirstChild(headshots.AutoLoadout.Gun)
-            and not plr.Backpack:FindFirstChild(headshots.AutoLoadout.Gun) then
-                
-                local shop = workspace.Ignored.Shop:FindFirstChild(ShopTable[headshots.AutoLoadout.Gun].ShopName)
-                if shop and shop:FindFirstChild("Head") then
-                    
-                    local saved = hrp.CFrame
-                    hrp.CFrame = shop.Head.CFrame
-                    
-                    RunService:BindToRenderStep("Restore",199,function()
-                        hrp.CFrame = saved
-                        RunService:UnbindFromRenderStep("Restore")
-                    end)
-
-                    local currentTool = char:FindFirstChildOfClass("Tool")
-                    if currentTool then
-                        currentTool.Parent = plr.Backpack
-                    end
-                    
-                    fireclickdetector(shop:FindFirstChildOfClass("ClickDetector"))
+                if #headshots.AutoLoadout.Queue > 0 then
+                    headshots.AutoLoadout.CurrentBuying = table.remove(headshots.AutoLoadout.Queue, 1)
+                    BuyingActive = true  -- Bắt đầu buying → strafe sẽ bị dừng ở frame đầu tiên
                 end
             end
+        end
 
+        if headshots.AutoLoadout.CurrentBuying then
+            local item = headshots.AutoLoadout.CurrentBuying
+            local shopName
+            if item.type == "gun" then
+                shopName = ShopTable[item.name].ShopName
+            else -- ammo
+                local ammoKey = "[" .. item.gun:sub(2, -2) .. " Ammo]"
+                shopName = ShopTable[ammoKey].ShopName
+            end
+            local shop = workspace.Ignored.Shop:FindFirstChild(shopName)
+            if shop and shop:FindFirstChild("Head") then
+                local saved = hrp.CFrame
+                hrp.CFrame = shop.Head.CFrame
 
-            -------- ARMOR BUY ------------
-            if headshots.AutoArmor.Enabled and char.BodyEffects.Armor.Value < 100 then
-                local shop = workspace.Ignored.Shop:FindFirstChild('[High-Medium Armor] - $2513')
-                if shop and shop:FindFirstChild("Head") then
-                    
-                    local saved = hrp.CFrame
-                    hrp.CFrame = shop.Head.CFrame
-                    
-                    RunService:BindToRenderStep("Restore",199,function()
-                        hrp.CFrame = saved
-                        RunService:UnbindFromRenderStep("Restore")
-                    end)
+                -- Reset velocity để tránh strafe cũ đẩy nhân vật (fix thêm)
+                hrp.Velocity = Vector3.zero
+                hrp.AssemblyLinearVelocity = Vector3.zero
 
-                    fireclickdetector(shop:FindFirstChildOfClass("ClickDetector"))
-                end
+                RunService:BindToRenderStep("RestoreAutoBuy", 199, function()
+                    hrp.CFrame = saved
+                    RunService:UnbindFromRenderStep("RestoreAutoBuy")
+                end)
+
+                local tool = char:FindFirstChildOfClass("Tool")
+                if tool then tool.Parent = localPlayer.Backpack end
+
+                fireclickdetector(shop:FindFirstChildOfClass("ClickDetector"))
             end
 
-        end)
-    end
+            BuyingActive = false  -- Hoàn thành buying → cho phép strafe resume nếu cần
+            headshots.AutoLoadout.CurrentBuying = nil
+        end
+    end)
 end)
 RunService.Heartbeat:Connect(function(dt)
         if matchacc.AutoKill.Enabled and matchacc.AutoKill.Target and not (AutoArmorActive or AutoLoadoutActive or BuyingSingleActive or BuyingAmmoActive) then
@@ -6373,49 +5963,29 @@ else
 end
 if isDaHood then 
 
-
--- UI Setup (sửa để phù hợp với lib của bạn, giả sử sử dụng Tabs.Misc:AddLeftGroupbox('AutoBuy'))
 local AutoBuyGroup = Tabs.Misc:AddLeftGroupbox('AutoBuy')
-
-AutoBuyGroup:AddDropdown('SelectedGun', {
-    Values = {'[Rifle]', '[LMG]', '[AK47]', '[AUG]', '[AR]', '[Double-Barrel SG]', '[Drum-Shotgun]', '[DrumGun]', '[Glock]', '[P90]', '[RPG]', '[Revolver]', '[Silencer]', '[SilencerAR]', '[Shotgun]', '[SMG]', '[TacticalShotgun]', '[Taser]'},
-    Default = '[Rifle]',
-    Multi = false,
-    Text = 'Select Gun',
-    Callback = function(Value)
-        SelectedGun = Value
-    end
-})
-
-AutoBuyGroup:AddButton('Buy Selected Gun', function()
-    BuyingSingle = true
-end)
-
-AutoBuyGroup:AddToggle('BuyAmmo', {
-    Text = 'Buy Ammo',
-    Default = false,
-    Callback = function(Value)
-        BuyingAmmo = Value
-    end
-})
-
 AutoBuyGroup:AddToggle('AutoBuyGunAmmo', {
     Text = 'Autobuy Gun + Ammo',
     Default = false,
     Callback = function(Value)
         headshots.AutoLoadout.Enabled = Value
+        if not Value then
+            -- Clear queue and current when disabled
+            headshots.AutoLoadout.Queue = {}
+            headshots.AutoLoadout.CurrentBuying = nil
+        end
+    end
+})
+AutoBuyGroup:AddDropdown('AutoLoadoutGun', {
+    Values = {'[Rifle]', '[LMG]', '[Flintlock]', '[AK47]', '[AUG]', '[AR]', '[Double-Barrel SG]', '[Drum-Shotgun]', '[DrumGun]', '[Glock]', '[P90]', '[RPG]', '[Revolver]', '[Silencer]', '[SilencerAR]', '[Shotgun]', '[SMG]', '[TacticalShotgun]', '[Taser]'},
+    Default = {},
+    Multi = true,
+    Text = 'Select Guns',
+    Callback = function(Value)
+        headshots.AutoLoadout.Guns = Value
     end
 })
 
-AutoBuyGroup:AddDropdown('AutoLoadoutGun', {
-    Values = {'[Rifle]', '[LMG]', '[AK47]', '[AUG]', '[AR]', '[Double-Barrel SG]', '[Drum-Shotgun]', '[DrumGun]', '[Glock]', '[P90]', '[RPG]', '[Revolver]', '[Silencer]', '[SilencerAR]', '[Shotgun]', '[SMG]', '[TacticalShotgun]', '[Taser]'},
-    Default = '[Rifle]',
-    Multi = false,
-    Text = 'Auto Gun',
-    Callback = function(Value)
-        headshots.AutoLoadout.Gun = Value
-    end
-})
 
 AutoBuyGroup:AddToggle('AutoArmor', {
     Text = 'Auto Armor',
@@ -6515,7 +6085,7 @@ WorldGroup:AddSlider('FogStart', {
 WorldGroup:AddSlider('FogEnd', {
     Text = 'Fog End',
     Min = 0,
-    Max = 1000,
+    Max = 10000,
     Default = originalFogEnd,
     Rounding = 1,
     Callback = function(Value)
@@ -6833,12 +6403,12 @@ local SkyboxAssets = {
         Up = "rbxassetid://18351377189"
     },
     ["Minecraft"] = {
-        Bk = "rbxassetid://8735166756",
-        Dn = "http://www.roblox.com/asset/?id=8735166707",
-        Ft = "http://www.roblox.com/asset/?id=8735231668",
-        Lf = "http://www.roblox.com/asset/?id=8735166755",
-        Rt = "http://www.roblox.com/asset/?id=8735166751",
-        Up = "http://www.roblox.com/asset/?id=8735166729"
+        Bk = "rbxassetid://1876545003",
+        Dn = "http://www.roblox.com/asset/?id=1876544331",
+        Ft = "http://www.roblox.com/asset/?id=1876542941",
+        Lf = "http://www.roblox.com/asset/?id=1876543392",
+        Rt = "http://www.roblox.com/asset/?id=1876543764",
+        Up = "http://www.roblox.com/asset/?id=1876544642"
     },
     ["Sunset 2"] = {
         Bk = "http://www.roblox.com/asset/?id=151165214",
