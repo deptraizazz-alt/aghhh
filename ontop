@@ -2237,195 +2237,322 @@ getgenv().Matcha.Legit = {
 local LegitBox = Tabs.Main:AddRightTabbox()
 local AimlockBox = LegitBox:AddTab('Aimlock')
 local SilentBox = LegitBox:AddTab('SilentAim')
-SilentBox:AddToggle('SilentAimEnabled', {
-    Text = 'Silent Aim',
-    Default = false,
-    Callback = function(Value)
-        getgenv().Matcha.Legit.SilentAim = Value
-    end
-})
 
-SilentBox:AddDropdown('SilentAimMethod', {
-    Values = {'Rival', 'Flick'},
-    Default = 0,
-    Multi = false,
-    Text = 'Silent Aim Method',
-    Callback = function(Value)
-        getgenv().Matcha.Legit.SilentAimMethod = Value
-    end
-})
-SilentBox:AddToggle('SilentAimEnabled', {
-    Text = 'Silent Fov Enabled',
-    Default = false,
-    Callback = function(Value)
-        getgenv().Matcha.Legit.SilentFOVEnabled = Value
-    end
-})
-SilentBox:AddSlider('SilentFOV', {
-    Text = 'Silent Aim FOV',
-    Default = 100,
-    Min = 10,
-    Max = 1000,
-    Rounding = 0,
-    Callback = function(Value)
-        getgenv().Matcha.Legit.SilentFOV = Value
-    end
-})
-local camera = workspace.CurrentCamera
-if game.GameId ~= 17625359962 then
-local function isLobbyVisible()
-    return localPlayer.PlayerGui.MainGui.MainFrame.Lobby.Currency.Visible == true
-end
-local function getClosestPlayerToMouse()  -- Hàm closest player từ code Rival
-    local closestPlayer = nil
-    local shortestDistance = getgenv().Matcha.Legit.SilentFOVEnabled and getgenv().Matcha.Legit.SilentFOV or 9999
-    local mousePosition = UserInputService:GetMouseLocation()
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-            local head = player.Character.Head
-            local headPosition, onScreen = Camera:WorldToViewportPoint(head.Position)
-	        if not isAlive(player) then continue end
-
-	        if not isPlayerVisible(player) then continue end
-            if onScreen then
-                local screenPosition = Vector2.new(headPosition.X, headPosition.Y)
-                local distance = (screenPosition - mousePosition).Magnitude
-
-                if distance < shortestDistance then
-                    closestPlayer = player
-                    shortestDistance = distance
-                end
-            end
-        end
-    end
-
-    return closestPlayer
-end
-local isLeftMouseDown = false
-local autoClickConnection = nil
-local function autoClick()
-    if autoClickConnection then
-        autoClickConnection:Disconnect()
-    end
-    autoClickConnection = RunService.Heartbeat:Connect(function()
-        if isLeftMouseDown then
-            if not isLobbyVisible() then
-                mouse1click()
-            end
-        else
-            autoClickConnection:Disconnect()
-        end
-    end)
-end
-UserInputService.InputBegan:Connect(function(input, isProcessed)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and not isProcessed then
-        if not isLeftMouseDown then
-            isLeftMouseDown = true
-            autoClick()
-        end
-    end
+local mtSupport = pcall(function()
+    local mt = getrawmetatable(game)
+    setreadonly(mt, false)
+    local old = mt.__index
+    mt.__index = old -- Test restore
+    setreadonly(mt, true)
 end)
-UserInputService.InputEnded:Connect(function(input, isProcessed)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and not isProcessed then
-        isLeftMouseDown = false
-    end
-end)
-local function lockCameraToHead(targetPlayer)
-    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Head") then
-        local head = targetPlayer.Character.Head
-        local headPosition = Camera:WorldToViewportPoint(head.Position)
-        if headPosition.Z > 0 then
-            local cameraPosition = Camera.CFrame.Position
-            Camera.CFrame = CFrame.new(cameraPosition, head.Position)
-        end
-    end
+
+if not mtSupport then
+    SilentBox:AddLabel("Your executor doesn't support Silent Aim")
 end
 
--- RunService cho Rival (chạy khi method là Rival)
-RunService.Heartbeat:Connect(function()
-    if getgenv().Matcha.Legit.SilentAim and getgenv().Matcha.Legit.SilentAimMethod == "Rival" and not isLobbyVisible() then
-        local targetPlayer = getClosestPlayerToMouse()  -- Closest player
-        if targetPlayer then
-            lockCameraToHead(targetPlayer)
-        end
-    end
-end)
+if mtSupport then
+	local mouse = localPlayer:GetMouse()
+	local camera = Workspace.CurrentCamera
+	
+	--// CONFIG
+	local silentAimEnabled = false
+	local silentTarget = nil
+	
+	local silentFOVEnabled = false
+	local silentFOVSize = 150
+	local silentFOVColor = Color3.fromRGB(255,255,255)
+	local silentOutlineColor = Color3.fromRGB(0,0,0)
+	local silentFillColor = Color3.fromRGB(255,255,255)
+	local silentFillEnabled = false
+	local silentFillTransparency = 0.5
+	
+	local silentPrediction = 0
+	local silentAutoPred = false
+	
+	local silentCheckWall = false
+	local silentCheckAlive = true
+	
+	local silentOffset = 0
+	local silentJumpOffset = 0
+	local useAirPart = false
+	local silentAirPart = "Head"
+	local silentHitPart = "Head"
+	
+	--// DRAWING FOV
+	local FOVCircle = Drawing.new("Circle")
+	FOVCircle.Thickness = 1
+	FOVCircle.NumSides = 100
+	FOVCircle.Filled = false
+	FOVCircle.ZIndex = 1
+	FOVCircle.Visible = false
+	
+	local FOVOutline = Drawing.new("Circle")
+	FOVOutline.Thickness = 2
+	FOVOutline.NumSides = 100
+	FOVOutline.Filled = false
+	FOVOutline.ZIndex = 1
+	FOVOutline.Visible = false
+	
+	local FOVFill = Drawing.new("Circle")
+	FOVFill.Thickness = 1
+	FOVFill.NumSides = 100
+	FOVFill.Filled = true
+	FOVFill.ZIndex = 0
+	FOVFill.Visible = false
+	
+	local function getAimPos()
+	    if UserInputService.TouchEnabled then
+	        return Vector2.new(
+	            camera.ViewportSize.X / 2,
+	            camera.ViewportSize.Y / 2
+	        )
+	    end
+	    return UserInputService:GetMouseLocation()
+	end
+	
+	--// WALL CHECK
+	local function visibleCheck(part, char)
+	    if not silentCheckWall then return true end
+	
+	    local params = RaycastParams.new()
+	    params.FilterType = Enum.RaycastFilterType.Exclude
+	    params.FilterDescendantsInstances = {localPlayer.Character, camera}
+	    params.IgnoreWater = true
+	
+	    local ray = Workspace:Raycast(
+	        camera.CFrame.Position,
+	        (part.Position - camera.CFrame.Position),
+	        params
+	    )
+	
+	    return (not ray) or ray.Instance:IsDescendantOf(char)
+	end
+	
+	--// GET CLOSEST TARGET IN FOV
+	local function getClosestTarget()
+	    local closest, dist = nil, math.huge
+	    local aimPos = getAimPos()
+	
+	    for _,plr in ipairs(Players:GetPlayers()) do
+	        if plr ~= localPlayer and plr.Character then
+	            if silentCheckAlive and not isAlive(plr) then continue end
+	
+	            local char = plr.Character
+	            local part = char:FindFirstChild(silentHitPart)
+	            if not part then continue end
+	
+	            local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
+	            if not onScreen then continue end
+	
+	            local mag = (Vector2.new(screenPos.X, screenPos.Y) - aimPos).Magnitude
+	            if mag > silentFOVSize then continue end
+	            if not visibleCheck(part, char) then continue end
+	
+	            if mag < dist then
+	                dist = mag
+	                closest = plr
+	            end
+	        end
+	    end
+	
+	    return closest
+	end
+	
+	--// METATABLE HOOK
+	local mt = getrawmetatable(game)
+	setreadonly(mt,false)
+	local oldIndex = mt.__index
+	
+	mt.__index = newcclosure(function(self, idx)
+	    if silentAimEnabled and self == mouse and (idx == "Hit" or idx == "Target") then
+	        local target = silentTarget
+	        if not target or not target.Character then
+	            return oldIndex(self, idx)
+	        end
+	
+	        local char = target.Character
+	        local root = char:FindFirstChild("HumanoidRootPart")
+	        local partName = useAirPart and silentAirPart or silentHitPart
+	        local part = char:FindFirstChild(partName)
+	
+	        if not root or not part then
+	            return oldIndex(self, idx)
+	        end
+	
+	        local pos = part.Position
+	        local pred = pos + root.Velocity * silentPrediction
+	        pred += Vector3.new(0, silentOffset + silentJumpOffset, 0)
+	
+	        if idx == "Hit" then
+	            return CFrame.new(pos, pred)
+	        elseif idx == "Target" then
+	            return part
+	        end
+	    end
+	
+	    return oldIndex(self, idx)
+	end)
+	
+	setreadonly(mt,true)
+	
+	--// UPDATE LOOP
+	RunService.RenderStepped:Connect(function()
+	    local aimPos = getAimPos()
+	
+	    -- Update FOV
+	    if silentFOVEnabled then
+	        FOVCircle.Visible = true
+	        FOVOutline.Visible = true
+	        FOVFill.Visible = silentFillEnabled
+	
+	        FOVCircle.Position = aimPos
+	        FOVOutline.Position = aimPos
+	        FOVFill.Position = aimPos
+	
+	        FOVCircle.Radius = silentFOVSize
+	        FOVOutline.Radius = silentFOVSize + 1
+	        FOVFill.Radius = silentFOVSize
+	
+	        FOVCircle.Color = silentFOVColor
+	        FOVOutline.Color = silentOutlineColor
+	        FOVFill.Color = silentFillColor
+	        FOVFill.Transparency = silentFillTransparency
+	    else
+	        FOVCircle.Visible = false
+	        FOVOutline.Visible = false
+	        FOVFill.Visible = false
+	    end
+	
+	    if not silentAimEnabled then
+	        silentTarget = nil
+	        return
+	    end
+	
+	    local newTarget = getClosestTarget()
+	    silentTarget = newTarget
+	end)
+	SilentBox:AddToggle("SilentAimToggle", {
+	    Text = "Silent Aim",
+	    Default = false,
+	    Callback = function(v)
+	        silentAimEnabled = v
+	        if not v then
+	            silentTarget = nil
+	        end
+	    end
+	})
+	SilentBox:AddToggle("SilentFOVToggle", {
+	    Text = "Show FOV",
+	    Default = false,
+	    Callback = function(v)
+	        silentFOVEnabled = v
+	    end
+	}):AddColorPicker("SilentFOVColor", {
+	    Default = Color3.fromRGB(255,255,255),
+	    Callback = function(c)
+	        silentFOVColor = c
+	    end
+	}):AddColorPicker("SilentOutlineColor", {
+	    Default = Color3.fromRGB(0,0,0),
+	    Callback = function(c)
+	        silentOutlineColor = c
+	    end
+	})
+	
+
+	
+	SilentBox:AddToggle("FillFOVToggle", {
+	    Text = "Fill FOV",
+	    Default = false,
+	    Callback = function(v)
+	        silentFillEnabled = v
+	    end
+	}):AddColorPicker("FillFOVColor", {
+	    Default = Color3.fromRGB(255,255,255),
+	    Callback = function(c)
+	        silentFillColor = c
+	    end
+	})
+	
+	SilentBox:AddSlider("FillFOVTransparency", {
+	    Text = "Fill Transparency",
+	    Default = 0.5,
+	    Min = 0,
+	    Max = 1,
+	    Rounding = 2,
+	    Callback = function(v)
+	        silentFillTransparency = v
+	    end
+	})
+	SilentBox:AddInput("SilentPredictionInput", {
+	    Text = "Prediction",
+	    Default = "0",
+	    Numeric = true,
+	    Finished = true,
+	    Callback = function(v)
+	        silentPrediction = tonumber(v) or 0
+	    end
+	})
+	
+	SilentBox:AddToggle("SilentAutoPred", {
+	    Text = "Auto Prediction",
+	    Default = false,
+	    Callback = function(v)
+	        silentAutoPred = v
+	    end
+	})
+	SilentBox:AddToggle("SilentCheckWall", {
+	    Text = "Check Wall",
+	    Default = false,
+	    Callback = function(v)
+	        silentCheckWall = v
+	    end
+	})
+	
+	SilentBox:AddToggle("SilentCheckAlive", {
+	    Text = "Check Alive",
+	    Default = true,
+	    Callback = function(v)
+	        silentCheckAlive = v
+	    end
+	})
+	SilentBox:AddInput("SilentOffset", {
+	    Text = "Offset",
+	    Default = "0",
+	    Numeric = true,
+	    Finished = true,
+	    Callback = function(v)
+	        silentOffset = tonumber(v) or 0
+	    end
+	})
+	
+	SilentBox:AddInput("SilentJumpOffset", {
+	    Text = "Jump Offset",
+	    Default = "0",
+	    Numeric = true,
+	    Finished = true,
+	    Callback = function(v)
+	        silentJumpOffset = tonumber(v) or 0
+	    end
+	})
+	
+	SilentBox:AddToggle("UseAirPart", {
+	    Text = "Use Air Part",
+	    Default = false,
+	    Callback = function(v)
+	        useAirPart = v
+	    end
+	})
+	
+	SilentBox:AddDropdown("SilentAirPart", {
+	    Text = "Air Part",
+	    Values = {"Head","HumanoidRootPart","UpperTorso","LowerTorso"},
+	    Default = "Head",
+	    Callback = function(v)
+	        silentAirPart = v
+	    end
+	})
 end
-spawn(function()
-    local BulletHandler = nil
-    local OldFire = nil
-
-    local function get_closest_target(range)
-        local closest_part, closest_distance = nil, range
-        local mousePos = UserInputService:GetMouseLocation()
-
-        for _, player in pairs(players:GetPlayers()) do
-            if player == localPlayer or not player.Character or not player.Character:FindFirstChild("Head") then continue end
-            local hum = player.Character:FindFirstChildOfClass("Humanoid")
-	        if not isAlive(player) then continue end
-	        if not isPlayerVisible(player) then continue end
-            local headPos, onScreen = Camera:WorldToViewportPoint(player.Character.Head.Position)
-            if not onScreen then continue end
-
-            local dist = (Vector2.new(headPos.X, headPos.Y) - mousePos).Magnitude
-            if dist < closest_distance then
-                closest_distance = dist
-                closest_part = player.Character.Head
-            end
-        end
-        return closest_part
-    end
-
-    RunService.Heartbeat:Connect(function()
-        if not getgenv().Matcha.Legit.SilentAim or getgenv().Matcha.Legit.SilentAimMethod ~= "Flick" then
-            if BulletHandler and OldFire then
-                BulletHandler.Fire = OldFire
-                BulletHandler = nil
-                OldFire = nil
-            end
-            return
-        end
-
-        if not BulletHandler then
-            local success, mod = pcall(function()
-                return require(ReplicatedStorage:FindFirstChild("ModuleScripts", true):FindFirstChild("GunModules", true).BulletHandler)
-            end)
-            if not success then
-                -- gc fallback cực mạnh cho Rivals
-                for _, v in pairs(getgc(true)) do
-                    if typeof(v) == "table" and rawget(v, "Fire") and typeof(rawget(v, "Fire")) == "function" then
-                        BulletHandler = v
-                        break
-                    end
-                end
-            else
-                BulletHandler = mod
-            end
-
-            if BulletHandler and BulletHandler.Fire then
-                OldFire = BulletHandler.Fire
-                BulletHandler.Fire = newcclosure(function(data, ...)
-                    if not getgenv().Matcha.Legit.SilentAim then
-                        return OldFire(data, ...)
-                    end
-
-                    local closest = get_closest_target(getgenv().Matcha.Legit.SilentFOVEnabled and getgenv().Matcha.Legit.SilentFOV or 9999)
-
-                    if closest then
-                        local pred = 0
-                        local predictedPos = closest.Position + (closest.Velocity * pred)
-
-                        data.Direction = (predictedPos - data.Origin).Unit
-                        data.Force = data.Force * 1000
-                    end
-
-                    return OldFire(data, ...)
-                end)
-            end
-        end
-    end)
-end)
 
 AimlockBox:AddToggle('AimlockEnabled', {
     Text = 'Aimlock',
@@ -2556,6 +2683,199 @@ RunService.RenderStepped:Connect(function()
         updateCamlock()
     end
 end)
+local BulletTpGroup = Tabs.Main:AddRightGroupbox('Bullet Tp')
+if getnamecallmethod then
+local players = game:GetService("Players")
+local run_service = game:GetService("RunService")
+local user_input_service = game:GetService("UserInputService")
+local tween_service = game:GetService("TweenService")
+local client = players.LocalPlayer
+local mouse = client:GetMouse()
+local Camera = workspace.CurrentCamera
+local script_data = {
+    functions = {},
+    targeting = {
+        target = nil,
+    },
+    connections = {},
+    utility = {
+        gun = {}
+    }
+}
+-- Config với toggle thay vì keybind
+local config = {
+    bullet_tp = false,
+    part = "Head",
+    bullet_tp_mode = "Follow Target Aim",
+}
+BulletTpGroup:AddToggle('BulletTP', {
+    Text = 'Bullet TP',
+    Default = config.bullet_tp,
+    Callback = function(value)
+        config.bullet_tp = value
+        if value then
+            Library:Notify("Bullet TP Enabled", 2)
+            ApplyWallbang(true)
+        else
+            Library:Notify("Bullet TP Disabled", 2)
+            script_data.targeting.target = nil
+        end
+    end
+})
+BulletTpGroup:AddDropdown('BulletTPPart', {
+    Text = 'TP Bullet Part',
+    Values = {"Head", "HumanoidRootPart", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"},
+    Default = "Head",
+    Callback = function(value)
+        config.part = value
+    end
+})
+BulletTpGroup:AddDropdown('BulletTPMode', {
+    Text = 'TP Bullet Mode',
+    Values = {"Follow Target Aim", "Follow Nearest Cursor"},
+    Default = "Follow Target Aim",
+    Callback = function(value)
+        config.bullet_tp_mode = value
+    end
+})
+-- Hàm tìm target (giữ nguyên của mày - đã rất ngon với fallback)
+function script_data.targeting.get_closest_target()
+    local closest = nil
+    if config.bullet_tp_mode == "Follow Target Aim" then
+        local targetName = matchacc.TargetAim.Target
+        if targetName and targetName ~= "None" then
+            local targetPlayer = players:FindFirstChild(targetName)
+            if targetPlayer and targetPlayer.Character then
+                local humanoid = targetPlayer.Character:FindFirstChild("Humanoid")
+                local root = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if humanoid and humanoid.Health > 0 and root then
+                    closest = targetPlayer
+                end
+            end
+        end
+    end
+    -- Fallback Nearest Cursor nếu không có target aim hoặc mode là Nearest
+    if not closest or config.bullet_tp_mode == "Follow Nearest Cursor" then
+        local min_dist = math.huge
+        local isMobile = user_input_service.TouchEnabled and not user_input_service.KeyboardEnabled
+        local screenPos = isMobile
+            and Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            or user_input_service:GetMouseLocation()
+        for _, player in ipairs(players:GetPlayers()) do
+            if player ~= client and player.Character then
+                local root = player.Character:FindFirstChild("HumanoidRootPart")
+                local humanoid = player.Character:FindFirstChild("Humanoid")
+                if root and humanoid and humanoid.Health > 0 then
+                    local worldPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+                    if onScreen then
+                        local dist = (Vector2.new(worldPos.X, worldPos.Y) - screenPos).Magnitude
+                        if dist < min_dist then
+                            min_dist = dist
+                            closest = player
+                        end
+                    end
+                end
+            end
+        end
+    end
+    script_data.targeting.target = closest
+    return closest
+end
+-- Hook mouse.Hit (dùng config.part để nhất quán)
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local old_index = mt.__index
+mt.__index = function(self, index)
+    if not checkcaller() and self == mouse then
+        if (index == "Hit" or (index == "Target" and game.PlaceId == 2788229376)) and config.bullet_tp then
+            local target = script_data.targeting.target
+            if target and target.Character then
+                local part = target.Character:FindFirstChild(config.part) or target.Character:FindFirstChild("HumanoidRootPart")
+                if part then
+                    if index == "Hit" then
+                        return CFrame.new(part.Position)
+                    else
+                        return part
+                    end
+                end
+            end
+        end
+    end
+    return old_index(self, index)
+end
+setreadonly(mt, true)
+-- cframe_to_offset cổ điển (giữ nguyên siêu ngon)
+script_data.functions.cframe_to_offset = function(origin, target)
+    local actual_origin = origin * CFrame.new(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -1, 0)
+    return actual_origin:ToObjectSpace(target):inverse()
+end
+-- Grip manipulation + dùng config.part
+script_data.functions.teleport_bullet = function(tool)
+    if not config.bullet_tp then return end
+   
+    local target = script_data.targeting.target
+    if not (target and target.Character) then return end
+    local target_part = target.Character:FindFirstChild(config.part) or target.Character:FindFirstChild("HumanoidRootPart")
+    if not target_part then return end
+    local char = client.Character
+    if not char or not char:FindFirstChild("RightHand") then return end
+    local original_grip = tool.Grip
+    tool.Parent = client.Backpack
+    tool.Grip = script_data.functions.cframe_to_offset(char.RightHand.CFrame, target_part.CFrame)
+    tool.Parent = char
+    run_service.RenderStepped:Wait()
+    tool.Parent = client.Backpack
+    tool.Grip = original_grip
+    tool.Parent = char
+end
+-- Handle character/tool (giữ nguyên đầy đủ như mày paste)
+script_data.functions.handle_character = function(character)
+    for _, conn in ipairs({ "character_child_added", "child_removing_character" }) do
+        if script_data.connections[conn] then
+            script_data.connections[conn]:Disconnect()
+        end
+    end
+    script_data.connections.character_child_added = character.ChildAdded:Connect(function(tool)
+        if tool:IsA("Tool") then
+            for _, conn in ipairs(getconnections(tool:GetPropertyChangedSignal("Grip"))) do
+                conn:Disable()
+            end
+            script_data.connections.tool_activated = tool.Activated:Connect(function()
+                if config.bullet_tp then
+                    script_data.functions.teleport_bullet(tool)
+                end
+            end)
+        end
+    end)
+    script_data.connections.child_removing_character = character.ChildRemoved:Connect(function()
+        script_data.utility.gun.tool = nil
+        if script_data.connections.tool_activated then
+            script_data.connections.tool_activated:Disconnect()
+        end
+    end)
+end
+local function setup_character(char)
+    script_data.functions.handle_character(char)
+end
+local current_character = client.Character or client.CharacterAdded:Wait()
+setup_character(current_character)
+client.CharacterAdded:Connect(setup_character)
+client.CharacterRemoving:Connect(function()
+    for _, conn in ipairs({ "character_child_added", "child_removing_character" }) do
+        if script_data.connections[conn] then
+            script_data.connections[conn]:Disconnect()
+        end
+    end
+end)
+-- Update target liên tục
+run_service.Heartbeat:Connect(function()
+    if config.bullet_tp then
+        script_data.targeting.get_closest_target()
+    end
+end)
+else
+    BulletTpGroup:AddLabel("Your executor doesn't support BulletTp")
+end
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
