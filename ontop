@@ -5016,47 +5016,36 @@ UserInputService.InputEnded:Connect(function(input)
         M1Down = false
     end
 end)
-local ShopTable = {
-    ["[Rifle]"] = {ShopName = "[Rifle] - $1694"},
-    ["[Rifle Ammo]"] = {ShopName = "5 [Rifle Ammo] - $273"},
-    ["[LMG]"] = {ShopName = "[LMG] - $4098"},
-    ["[LMG Ammo]"] = {ShopName = "200 [LMG Ammo] - $328"},
-    ["[AK47]"] = {ShopName = "[AK47] - $2459"},
-    ["[AK47 Ammo]"] = {ShopName = "90 [AK47 Ammo] - $87"},
-    ["[AUG]"] = {ShopName = "[AUG] - $2131"},
-    ["[AUG Ammo]"] = {ShopName = "90 [AUG Ammo] - $87"},
-    ["[Flintlock]"] = {ShopName = "[Flintlock] - $1421"},
-    ["[Flintlock Ammo]"] = {ShopName = "5 [Flintlock Ammo] - $163"},
-    ["[AR]"] = {ShopName = "[AR] - $1093"},
-    ["[AR Ammo]"] = {ShopName = "60 [AR Ammo] - $82"},
-    ["[Double-Barrel SG]"] = {ShopName = "[Double-Barrel SG] - $1475"},
-    ["[Double-Barrel SG Ammo]"] = {ShopName = "18 [Double-Barrel SG Ammo] - $55"},
-    ["[Drum-Shotgun]"] = {ShopName = "[Drum-Shotgun] - $1202"},
-    ["[Drum-Shotgun Ammo]"] = {ShopName = "18 [Drum-Shotgun Ammo] - $71"},
-    ["[DrumGun]"] = {ShopName = "[DrumGun] - $3278"},
-    ["[DrumGun Ammo]"] = {ShopName = "100 [DrumGun Ammo] - $219"},
-    ["[Fire Armor]"] = {ShopName = "[Fire Armor] - $2623"},
-    ["[Glock]"] = {ShopName = "[Glock] - $546"},
-    ["[Glock Ammo]"] = {ShopName = "25 [Glock Ammo] - $66"},
-    ["[P90]"] = {ShopName = "[P90] - $1093"},
-    ["[P90 Ammo]"] = {ShopName = "120 [P90 Ammo] - $66"},
-    ["[RPG]"] = {ShopName = "[RPG] - $21855"},
-    ["[RPG Ammo]"] = {ShopName = "5 [RPG Ammo] - $1093"},
-    ["[Revolver]"] = {ShopName = "[Revolver] - $1421"},
-    ["[Revolver Ammo]"] = {ShopName = "12 [Revolver Ammo] - $82"},
-    ["[Silencer]"] = {ShopName = "[Silencer] - $601"},
-    ["[Silencer Ammo]"] = {ShopName = "25 [Silencer Ammo] - $55"},
-    ["[SilencerAR]"] = {ShopName = "[SilencerAR] - $1366"},
-    ["[SilencerAR Ammo]"] = {ShopName = "120 [SilencerAR Ammo] - $82"},
-    ["[Shotgun]"] = {ShopName = "[Shotgun] - $1366"},
-    ["[Shotgun Ammo]"] = {ShopName = "20 [Shotgun Ammo] - $66"},
-    ["[SMG]"] = {ShopName = "[SMG] - $820"},
-    ["[SMG Ammo]"] = {ShopName = "80 [SMG Ammo] - $66"},
-    ["[TacticalShotgun]"] = {ShopName = "[TacticalShotgun] - $1912"},
-    ["[TacticalShotgun Ammo]"] = {ShopName = "20 [TacticalShotgun Ammo] - $66"},
-    ["[Taser]"] = {ShopName = "[Taser] - $1093"},
-    ["[Grenade]"] = {ShopName = "[Grenade] - $765"},
-}
+local ShopTable = {}
+
+local ShopFolder = workspace:WaitForChild("Ignored"):WaitForChild("Shop")
+
+local function normalizeKey(shopName)
+    -- Ammo: "90 [AK47 Ammo] - $87"
+    local ammo = shopName:match("%[(.- Ammo)%]")
+    if ammo then
+        return "[" .. ammo .. "]"
+    end
+
+    -- Gun: "[AK47] - $2459"
+    local gun = shopName:match("^(%b[])")
+    if gun then
+        return gun
+    end
+
+    return nil
+end
+
+for _, shop in ipairs(ShopFolder:GetChildren()) do
+    if shop:IsA("Model") and shop:FindFirstChild("Head") then
+        local key = normalizeKey(shop.Name)
+        if key then
+            ShopTable[key] = {
+                ShopName = shop.Name
+            }
+        end
+    end
+end
 local headshots = {}
 headshots.AutoLoadout = {Enabled = false, Guns = {}, Queue = {}, CurrentBuying = nil}
 headshots.AutoArmor = {Enabled = false}
